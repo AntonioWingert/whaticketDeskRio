@@ -4,6 +4,8 @@ import * as Yup from "yup";
 import { Formik, Form, Field } from "formik";
 import { toast } from "react-toastify";
 
+import whatsappIcon from '../../assets/whatsappIcon.png'
+
 import {
 	Button,
 	Dialog,
@@ -17,8 +19,10 @@ import {
 	FormControl,
 	TextField,
 	InputAdornment,
-	IconButton
-  } from '@material-ui/core';
+	IconButton,
+	Avatar,
+	Input
+} from '@material-ui/core';
 
 import { Visibility, VisibilityOff } from '@material-ui/icons';
 
@@ -33,6 +37,7 @@ import QueueSelect from "../QueueSelect";
 import { AuthContext } from "../../context/Auth/AuthContext";
 import { Can } from "../Can";
 import useWhatsApps from "../../hooks/useWhatsApps";
+import { ProfileImageContext } from "../../context/ProfileImage/ProfileImageContext";
 
 const useStyles = makeStyles(theme => ({
 	root: {
@@ -62,7 +67,52 @@ const useStyles = makeStyles(theme => ({
 		margin: theme.spacing(1),
 		minWidth: 120,
 	},
+	formDiv: {
+		display: "flex",
+		flexWrap: "wrap",
+		alignItems: "center",
+		justifyContent: "space-around",
+	},
+	avatar: {
+		width: theme.spacing(12),
+		height: theme.spacing(12),
+		margin: theme.spacing(2),
+		cursor: 'pointer',
+		borderRadius: '50%',
+		border: '2px solid #ccc',
+	},
+	updateDiv: {
+		display: 'flex',
+		flexDirection: 'column',
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	updateInput: {
+		display: 'none',
+	},
+	updateLabel: {
+		padding: theme.spacing(1),
+		margin: theme.spacing(1),
+		textTransform: 'uppercase',
+		textAlign: 'center',
+		cursor: 'pointer',
+		border: '2px solid #ccc',
+		borderRadius: '5px',
+		minWidth: 160,
+		fontWeight: 'bold',
+		color: '#555',
+	},
+	errorUpdate: {
+		border: '2px solid red',
+	},
+	errorText: {
+		color: 'red',
+		fontSize: '0.8rem',
+		fontWeight: 'bold',
+	}
 }));
+
+const SUPPORTED_FORMATS = ['image/jpg', 'image/jpeg', 'image/png'];
 
 const UserSchema = Yup.object().shape({
 	name: Yup.string()
@@ -71,6 +121,16 @@ const UserSchema = Yup.object().shape({
 		.required("Required"),
 	password: Yup.string().min(5, "Too Short!").max(50, "Too Long!"),
 	email: Yup.string().email("Invalid email").required("Required"),
+	profileImage: Yup.mixed()
+		.nullable()
+		.test('fileType', 'Unsupported File Format', value => {
+			if (!value) return true
+			return value && SUPPORTED_FORMATS.includes(value.type)
+		})
+		.test('fileSize', 'File too large, max 2mb', value => {
+			if (!value) return true
+			return value && value.size <= 2 * 1024 * 1024
+		}),
 });
 
 const UserModal = ({ open, onClose, userId }) => {
@@ -80,7 +140,9 @@ const UserModal = ({ open, onClose, userId }) => {
 		name: "",
 		email: "",
 		password: "",
-		profile: "user"
+		profile: "user",
+		avatar: null,
+		profileImage: null,
 	};
 
 	const { user: loggedInUser } = useContext(AuthContext);
@@ -89,16 +151,22 @@ const UserModal = ({ open, onClose, userId }) => {
 	const [selectedQueueIds, setSelectedQueueIds] = useState([]);
 	const [showPassword, setShowPassword] = useState(false);
 	const [whatsappId, setWhatsappId] = useState(false);
-	const {loading, whatsApps} = useWhatsApps();
+	const { loading, whatsApps } = useWhatsApps();
+	const { handleProfileImage, handleUser } = useContext(ProfileImageContext);
 
 	useEffect(() => {
 		const fetchUser = async () => {
 			if (!userId) return;
 			try {
 				const { data } = await api.get(`/users/${userId}`);
+				const { profileImage } = data;
+				const profileUrl = profileImage ? `http://localhost:8080/profilePics/${profileImage}` : null;
 				setUser(prevState => {
-					return { ...prevState, ...data };
+					return { ...prevState, ...data, avatar: profileUrl };
 				});
+
+				loggedInUser.profileImage = profileUrl;
+
 				const userQueueIds = data.queues?.map(queue => queue.id);
 				setSelectedQueueIds(userQueueIds);
 				setWhatsappId(data.whatsappId ? data.whatsappId : '');
@@ -110,24 +178,55 @@ const UserModal = ({ open, onClose, userId }) => {
 		fetchUser();
 	}, [userId, open]);
 
+	useEffect(() => {
+		handleUser(user);
+		handleProfileImage(user.avatar);
+	}, [user, handleUser, handleProfileImage]);
+
 	const handleClose = () => {
 		onClose();
 		setUser(initialState);
 	};
 
 	const handleSaveUser = async values => {
-		const userData = { ...values, whatsappId, queueIds: selectedQueueIds };
+		const formData = new FormData();
+		formData.append('profileImage', values.profileImage);
+		formData.append('name', values.name);
+		formData.append('email', values.email);
+		formData.append('password', values.password);
+		formData.append('profile', values.profile);
+		formData.append('avatar', values.avatar);
+		formData.append('whatsappId', whatsappId);
+		if (selectedQueueIds.length > 0) {
+			for (const id of selectedQueueIds) {
+				formData.append('queueIds[]', id);
+			}
+		} else {
+			formData.delete('queueIds[]');
+		}
+
 		try {
+
 			if (userId) {
-				await api.put(`/users/${userId}`, userData);
+				await api.put(`/users/${userId}`, formData);
 			} else {
-				await api.post("/users", userData);
+				await api.post("/users", formData);
 			}
 			toast.success(i18n.t("userModal.success"));
 		} catch (err) {
 			toastError(err);
 		}
 		handleClose();
+	};
+
+	const handleUpdateProfileImage = (e) => {
+		if (!e.target.files[0]) return;
+
+		setUser(prevState => ({
+			...prevState,
+			avatar: URL.createObjectURL(e.target.files[0]),
+			profileImage: e.target.files[0]
+		}));
 	};
 
 	return (
@@ -157,83 +256,120 @@ const UserModal = ({ open, onClose, userId }) => {
 				>
 					{({ touched, errors, isSubmitting }) => (
 						<Form>
-							<DialogContent dividers>
-								<div className={classes.multFieldLine}>
-									<Field
-										as={TextField}
-										label={i18n.t("userModal.form.name")}
-										autoFocus
-										name="name"
-										error={touched.name && Boolean(errors.name)}
-										helperText={touched.name && errors.name}
-										variant="outlined"
-										margin="dense"
-										fullWidth
-									/>
-									<Field
-										as={TextField}
-										name="password"
-										variant="outlined"
-										margin="dense"
-										label={i18n.t("userModal.form.password")}
-										error={touched.password && Boolean(errors.password)}
-										helperText={touched.password && errors.password}
-										type={showPassword ? 'text' : 'password'}
-										InputProps={{
-										endAdornment: (
-											<InputAdornment position="end">
-											<IconButton
-												aria-label="toggle password visibility"
-												onClick={() => setShowPassword((e) => !e)}
-											>
-												{showPassword ? <VisibilityOff /> : <Visibility />}
-											</IconButton>
-											</InputAdornment>
-										)
-										}}
-										fullWidth
-									/>
-								</div>
-								<div className={classes.multFieldLine}>
-									<Field
-										as={TextField}
-										label={i18n.t("userModal.form.email")}
-										name="email"
-										error={touched.email && Boolean(errors.email)}
-										helperText={touched.email && errors.email}
-										variant="outlined"
-										margin="dense"
-										fullWidth
-									/>
-									<FormControl
-										variant="outlined"
-										className={classes.formControl}
-										margin="dense"
-									>
-										<Can
-											role={loggedInUser.profile}
-											perform="user-modal:editProfile"
-											yes={() => (
-												<>
-													<InputLabel id="profile-selection-input-label">
-														{i18n.t("userModal.form.profile")}
-													</InputLabel>
-
-													<Field
-														as={Select}
-														label={i18n.t("userModal.form.profile")}
-														name="profile"
-														labelId="profile-selection-label"
-														id="profile-selection"
-														required
-													>
-														<MenuItem value="admin">Admin</MenuItem>
-														<MenuItem value="user">User</MenuItem>
-													</Field>
-												</>
-											)}
+							<DialogContent dividers className={classes.formDiv}>
+								<FormControl className={classes.updateDiv}>
+									<label htmlFor="profileImage">
+										<Avatar
+											src={user.avatar ? user.avatar : whatsappIcon}
+											alt="profile-image"
+											className={`${classes.avatar} ${touched.profileImage && errors.profileImage ? classes.errorUpdate : ''}`}
+										/>
+									</label>
+									<FormControl className={classes.updateDiv}>
+										<label htmlFor="profileImage"
+											className={`${classes.updateLabel} ${touched.profileImage && errors.profileImage ? classes.errorUpdate : ''}`}
+										>
+											{user.profileImage ? 'Atualizar Imagem' : 'Adicionar Imagem'}
+										</label>
+										{
+											touched.profileImage && errors.profileImage && (
+												<span className={classes.errorText}>{errors.profileImage}</span>)
+										}
+										<Input
+											type="file"
+											name="profileImage"
+											id="profileImage"
+											className={classes.updateInput}
+											onChange={event => handleUpdateProfileImage(event)}
 										/>
 									</FormControl>
+									{user.avatar &&
+										<Button
+											variant="outlined"
+											color="secondary"
+											onClick={() => setUser(prevState => ({ ...prevState, avatar: null, profileImage: null }))}
+										>
+											Remover Imagem
+										</Button>
+									}
+								</FormControl>
+								<div>
+									<div className={classes.multFieldLine}>
+										<Field
+											as={TextField}
+											label={i18n.t("userModal.form.name")}
+											autoFocus
+											name="name"
+											error={touched.name && Boolean(errors.name)}
+											helperText={touched.name && errors.name}
+											variant="outlined"
+											margin="dense"
+											fullWidth
+										/>
+										<Field
+											as={TextField}
+											name="password"
+											variant="outlined"
+											margin="dense"
+											label={i18n.t("userModal.form.password")}
+											error={touched.password && Boolean(errors.password)}
+											helperText={touched.password && errors.password}
+											type={showPassword ? 'text' : 'password'}
+											InputProps={{
+												endAdornment: (
+													<InputAdornment position="end">
+														<IconButton
+															aria-label="toggle password visibility"
+															onClick={() => setShowPassword((e) => !e)}
+														>
+															{showPassword ? <VisibilityOff /> : <Visibility />}
+														</IconButton>
+													</InputAdornment>
+												)
+											}}
+											fullWidth
+										/>
+									</div>
+									<div className={classes.multFieldLine}>
+										<Field
+											as={TextField}
+											label={i18n.t("userModal.form.email")}
+											name="email"
+											error={touched.email && Boolean(errors.email)}
+											helperText={touched.email && errors.email}
+											variant="outlined"
+											margin="dense"
+											fullWidth
+										/>
+										<FormControl
+											variant="outlined"
+											className={classes.formControl}
+											margin="dense"
+										>
+											<Can
+												role={loggedInUser.profile}
+												perform="user-modal:editProfile"
+												yes={() => (
+													<>
+														<InputLabel id="profile-selection-input-label">
+															{i18n.t("userModal.form.profile")}
+														</InputLabel>
+														<Field
+															as={Select}
+															label={i18n.t("userModal.form.profile")}
+															name="profile"
+															labelId="profile-selection-label"
+															id="profile-selection"
+															required
+														>
+															<MenuItem value="admin">Admin</MenuItem>
+															<MenuItem value="user">User</MenuItem>
+														</Field>
+													</>
+												)}
+											/>
+										</FormControl>
+									</div>
 								</div>
 								<Can
 									role={loggedInUser.profile}

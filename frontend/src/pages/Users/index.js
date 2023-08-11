@@ -29,6 +29,8 @@ import TableRowSkeleton from "../../components/TableRowSkeleton";
 import UserModal from "../../components/UserModal";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import toastError from "../../errors/toastError";
+import { Avatar } from "@material-ui/core";
+import { AccountCircle } from "@material-ui/icons";
 
 const reducer = (state, action) => {
   if (action.type === "LOAD_USERS") {
@@ -81,6 +83,15 @@ const useStyles = makeStyles((theme) => ({
     overflowY: "scroll",
     ...theme.scrollbarStyles,
   },
+  avatarDiv: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  userAvatar: {
+    width: '20px',
+    height: '20px',
+  }
 }));
 
 const Users = () => {
@@ -187,8 +198,7 @@ const Users = () => {
       <ConfirmationModal
         title={
           deletingUser &&
-          `${i18n.t("users.confirmationModal.deleteTitle")} ${
-            deletingUser.name
+          `${i18n.t("users.confirmationModal.deleteTitle")} ${deletingUser.name
           }?`
         }
         open={confirmModalOpen}
@@ -236,6 +246,9 @@ const Users = () => {
         <Table size="small">
           <TableHead>
             <TableRow>
+              <TableCell align="center">
+                Avatar
+              </TableCell>
               <TableCell align="center">{i18n.t("users.table.name")}</TableCell>
               <TableCell align="center">
                 {i18n.t("users.table.email")}
@@ -245,7 +258,7 @@ const Users = () => {
               </TableCell>
               <TableCell align="center">
                 {i18n.t("users.table.whatsapp")}
-              </TableCell>              
+              </TableCell>
               <TableCell align="center">
                 {i18n.t("users.table.actions")}
               </TableCell>
@@ -255,6 +268,21 @@ const Users = () => {
             <>
               {users.map((user) => (
                 <TableRow key={user.id}>
+                  <TableCell align="center" >
+                    <div className={classes.avatarDiv}>
+                      {
+                        user.profileImage ? (
+                          <Avatar
+                            src={`http://localhost:8080/profilePics/${user.profileImage}`}
+                            alt={user.name}
+                            className={classes.userAvatar}
+                          />)
+                          : (
+                            <AccountCircle />
+                          )
+                      }
+                    </div>
+                  </TableCell>
                   <TableCell align="center">{user.name}</TableCell>
                   <TableCell align="center">{user.email}</TableCell>
                   <TableCell align="center">{user.profile}</TableCell>
