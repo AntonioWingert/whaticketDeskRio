@@ -21,7 +21,8 @@ describe("User", () => {
     const newUser = await CreateUserService({
       name: faker.name.findName(),
       email: faker.internet.email(),
-      password: faker.internet.password()
+      password: faker.internet.password(),
+      profileImage: faker.image.imageUrl()
     });
 
     const updatedUser = await UpdateUserService({
@@ -29,7 +30,8 @@ describe("User", () => {
       userData: {
         name: "New name",
         email: "newmail@email.com"
-      }
+      },
+      profileImage: faker.image.imageUrl()
     });
 
     expect(updatedUser).toHaveProperty("name", "New name");
@@ -42,17 +44,19 @@ describe("User", () => {
       name: faker.name.findName(),
       email: faker.internet.email()
     };
+    const profileImage = faker.image.imageUrl();
 
-    expect(UpdateUserService({ userId, userData })).rejects.toBeInstanceOf(
-      AppError
-    );
+    expect(
+      UpdateUserService({ userId, userData, profileImage })
+    ).rejects.toBeInstanceOf(AppError);
   });
 
   it("should not be able to updated an user with invalid data", async () => {
     const newUser = await CreateUserService({
       name: faker.name.findName(),
       email: faker.internet.email(),
-      password: faker.internet.password()
+      password: faker.internet.password(),
+      profileImage: faker.image.imageUrl()
     });
 
     const userId = newUser.id;
@@ -60,9 +64,10 @@ describe("User", () => {
       name: faker.name.findName(),
       email: "test.worgn.email"
     };
+    const profileImage = faker.image.imageUrl();
 
-    expect(UpdateUserService({ userId, userData })).rejects.toBeInstanceOf(
-      AppError
-    );
+    expect(
+      UpdateUserService({ userId, userData, profileImage })
+    ).rejects.toBeInstanceOf(AppError);
   });
 });
