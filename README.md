@@ -1,43 +1,33 @@
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?business=VWW3BHW4AWHUY&item_name=Desenvolvimento+de+Software&currency_code=BRL)
-[![FOSSA Status](https://app.fossa.com/api/projects/custom%2B21084%2Fgithub.com%2Fcanove%2Fwhaticket.svg?type=shield)](https://app.fossa.com/projects/custom%2B21084%2Fgithub.com%2Fcanove%2Fwhaticket?ref=badge_shield)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=canove_whaticket&metric=alert_status)](https://sonarcloud.io/dashboard?id=canove_whaticket)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=canove_whaticket&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=canove_whaticket)
-[![Discord Chat](https://img.shields.io/discord/784109818247774249.svg?logo=discord)](https://discord.gg/Dp2tTZRYHg)
-[![Forum](https://img.shields.io/badge/forum-online-blue.svg?logo=discourse)](https://whaticket.online/)
+# WhaTicket - WhatsApp-based Ticket System
 
-# WhaTicket
+This project is a ticket management system designed to facilitate the handling and resolution of user inquiries and requests through WhatsApp. As part of this project, I had the opportunity to develop an innovative feature that enables the addition of profile pictures to users.
 
-**NOTE**: The new version of whatsapp-web.js required Node 14. Upgrade your installations to keep using it.
+The system is built using the whatsapp-web.js library to interact with WhatsApp, allowing the receipt and sending of messages. It effectively transforms incoming WhatsApp messages into actionable tickets, which are then stored in a MySQL database for efficient management.
 
-A _very simple_ Ticket System based on WhatsApp messages.
+The frontend of the system is a fully-featured chat application, developed with react-create-app and Material UI. This frontend interacts with the backend through a combination of REST API calls and WebSockets. Users are empowered to engage with contacts, manage tickets, and effortlessly send and receive WhatsApp messages.
 
-Backend uses [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js) to receive and send WhatsApp messages, create tickets from them and store all in a MySQL database.
+**Features:**
 
-Frontend is a full-featured multi-user _chat app_ bootstrapped with react-create-app and Material UI, that comunicates with backend using REST API and Websockets. It allows you to interact with contacts, tickets, send and receive WhatsApp messages.
+- Support for multiple users engaged in conversations with the same WhatsApp number ✅
+- Capability to connect to multiple WhatsApp accounts, streamlining message reception ✅ 🆕
+- Ability to establish conversations and exchange messages with new contacts directly from the system ✅
+- Seamless sending and receipt of text messages ✅
+- Effortless sharing and receipt of media files (images, audio, documents) ✅
 
-**NOTE**: I can't guarantee you will not be blocked by using this method, although it has worked for me. WhatsApp does not allow bots or unofficial clients on their platform, so this shouldn't be considered totally safe.
+**How It Works:**
 
-## How it works?
+- Upon receiving a new message from a WhatsApp-associated number, the system generates a new ticket.
+- Tickets are presented in a queue on the "Tickets" page, where users can assign and accept tickets, respond to inquiries, and mark them as resolved.
+- Subsequent messages from the same contact are automatically linked to the corresponding open or pending ticket.
+- If a contact sends a new message within a 2-hour interval and there is no existing pending ticket, the most recent closed ticket will be reopened instead of creating a new one.
 
-On every new message received in an associated WhatsApp, a new Ticket is created. Then, this ticket can be reached in a _queue_ on _Tickets_ page, where you can assign ticket to your yourself by _aceppting_ it, respond ticket message and eventually _resolve_ it.
+**Screenshots:**
 
-Subsequent messages from same contact will be related to first **open/pending** ticket found.
+![UserModal Edit](backend/src/assets/userEdit.png)
 
-If a contact sent a new message in less than 2 hours interval, and there is no ticket from this contact with **pending/open** status, the newest **closed** ticket will be reopen, instead of creating a new one.
+![UserModal Edited](backend/src/assets/userEdited.png)
 
-## Screenshots
-
-![](https://github.com/canove/whaticket/raw/master/images/whaticket-queues.gif)
-<img src="https://raw.githubusercontent.com/canove/whaticket/master/images/chat2.png" width="350"> <img src="https://raw.githubusercontent.com/canove/whaticket/master/images/chat3.png" width="350"> <img src="https://raw.githubusercontent.com/canove/whaticket/master/images/multiple-whatsapps2.png" width="350"> <img src="https://raw.githubusercontent.com/canove/whaticket/master/images/contacts1.png" width="350">
-
-## Features
-
-- Have multiple users chating in same WhatsApp Number ✅
-- Connect to multiple WhatsApp accounts and receive all messages in one place ✅ 🆕
-- Create and chat with new contacts without touching cellphone ✅
-- Send and receive message ✅
-- Send media (images/audio/documents) ✅
-- Receive media (images/audio/video/documents) ✅
+![Users List](backend/src/assets/userList.png)
 
 ## Installation and Usage (Linux Ubuntu - Development)
 
@@ -65,7 +55,7 @@ sudo apt-get install -y libxshmfence-dev libgbm-dev wget unzip fontconfig locale
 Clone this repo
 
 ```bash
-git clone https://github.com/canove/whaticket/ whaticket
+git clone https://github.com/AntonioWingert/whaticket whaticket
 ```
 
 Go to backend folder and create .env file:
@@ -118,7 +108,11 @@ REACT_APP_BACKEND_URL = http://localhost:8080/ # Your previous configured backen
 
 Start frontend app:
 
+This project requires Node.js version 16 or lower. Starting from Node.js version 17, compatibility issues may arise. Make sure to use an appropriate version when setting up the environment to run this project.
+
+
 ```bash
+npm install
 npm start
 ```
 
@@ -126,7 +120,8 @@ npm start
 - Create an user and login with it.
 - On the sidebard, go to _Connections_ page and create your first WhatsApp connection.
 - Wait for QR CODE button to appear, click it and read qr code.
-- Done. Every message received by your synced WhatsApp number will appear in Tickets List.
+- Every message received by your synced WhatsApp number will appear in Tickets List.
+- Done! If you have any questions, feedback, or suggestions regarding the modifications I've made, please don't hesitate to get in touch! You can reach me via email at antoniobwingert@gmail.com or check out my GitHub profile at [AntonioWingert](https://github.com/AntonioWingert).
 
 ## Basic production deployment
 
@@ -513,21 +508,8 @@ chmod +x updateWhaticket
 ./updateWhaticket
 ```
 
-## Contributing
+## Contribution
 
-This project helps you and you want to help keep it going? Buy me a coffee:
+This project is open-source, and you're welcome to contribute by suggesting improvements, bug fixes, and new features. Feel free to open pull requests or discuss ideas in the GitHub repository's issue section: [https://github.com/canove/whaticket](https://github.com/canove/whaticket)
 
-<a href="https://www.buymeacoffee.com/canove" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 61px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
-
-Para doações em BRL, utilize o Paypal:
-
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?business=VWW3BHW4AWHUY&item_name=Desenvolvimento+de+Software&currency_code=BRL)
-
-Any help and suggestions will be apreciated.
-
-## Disclaimer
-
-I just started leaning Javascript a few months ago and this is my first project. It may have security issues and many bugs. I recommend using it only on local network.
-
-This project is not affiliated, associated, authorized, endorsed by, or in any way officially connected with WhatsApp or any of its subsidiaries or its affiliates. The official WhatsApp website can be found at https://whatsapp.com. "WhatsApp" as well as related names, marks, emblems and images are registered trademarks of their respective owners.
-# whaticketDeskRio
+Always remember to follow recommended security practices when setting up communication systems with external APIs like WhatsApp to avoid potential blocks or other restrictions.
