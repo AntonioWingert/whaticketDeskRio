@@ -38,6 +38,9 @@ import { AuthContext } from "../../context/Auth/AuthContext";
 import { Can } from "../Can";
 import useWhatsApps from "../../hooks/useWhatsApps";
 import { ProfileImageContext } from "../../context/ProfileImage/ProfileImageContext";
+import { getBackendUrl } from "../../config";
+
+const backendUrl = getBackendUrl();
 
 const useStyles = makeStyles(theme => ({
 	root: {
@@ -160,7 +163,7 @@ const UserModal = ({ open, onClose, userId }) => {
 			try {
 				const { data } = await api.get(`/users/${userId}`);
 				const { profileImage } = data;
-				const profileUrl = profileImage ? `http://localhost:8080/profilePics/${profileImage}` : null;
+				const profileUrl = profileImage ? `${backendUrl}profilePics/${profileImage}` : null;
 				setUser(prevState => {
 					return { ...prevState, ...data, avatar: profileUrl };
 				});
@@ -234,7 +237,7 @@ const UserModal = ({ open, onClose, userId }) => {
 			<Dialog
 				open={open}
 				onClose={handleClose}
-				maxWidth="xs"
+				maxWidth="md"
 				fullWidth
 				scroll="paper"
 			>
@@ -255,7 +258,7 @@ const UserModal = ({ open, onClose, userId }) => {
 					}}
 				>
 					{({ touched, errors, isSubmitting }) => (
-						<Form>
+						<Form encType="multipart/form-data">
 							<DialogContent dividers className={classes.formDiv}>
 								<FormControl className={classes.updateDiv}>
 									<label htmlFor="profileImage">
@@ -370,37 +373,37 @@ const UserModal = ({ open, onClose, userId }) => {
 											/>
 										</FormControl>
 									</div>
+									<Can
+										role={loggedInUser.profile}
+										perform="user-modal:editQueues"
+										yes={() => (
+											<QueueSelect
+												selectedQueueIds={selectedQueueIds}
+												onChange={values => setSelectedQueueIds(values)}
+											/>
+										)}
+									/>
+									<Can
+										role={loggedInUser.profile}
+										perform="user-modal:editQueues"
+										yes={() => (!loading &&
+											<FormControl variant="outlined" margin="dense" className={classes.maxWidth} fullWidth>
+												<InputLabel>{i18n.t("userModal.form.whatsapp")}</InputLabel>
+												<Field
+													as={Select}
+													value={whatsappId}
+													onChange={(e) => setWhatsappId(e.target.value)}
+													label={i18n.t("userModal.form.whatsapp")}
+												>
+													<MenuItem value={''}>&nbsp;</MenuItem>
+													{whatsApps.map((whatsapp) => (
+														<MenuItem key={whatsapp.id} value={whatsapp.id}>{whatsapp.name}</MenuItem>
+													))}
+												</Field>
+											</FormControl>
+										)}
+									/>
 								</div>
-								<Can
-									role={loggedInUser.profile}
-									perform="user-modal:editQueues"
-									yes={() => (
-										<QueueSelect
-											selectedQueueIds={selectedQueueIds}
-											onChange={values => setSelectedQueueIds(values)}
-										/>
-									)}
-								/>
-								<Can
-									role={loggedInUser.profile}
-									perform="user-modal:editQueues"
-									yes={() => (!loading &&
-										<FormControl variant="outlined" margin="dense" className={classes.maxWidth} fullWidth>
-											<InputLabel>{i18n.t("userModal.form.whatsapp")}</InputLabel>
-											<Field
-												as={Select}
-												value={whatsappId}
-												onChange={(e) => setWhatsappId(e.target.value)}
-												label={i18n.t("userModal.form.whatsapp")}
-											>
-												<MenuItem value={''}>&nbsp;</MenuItem>
-												{whatsApps.map((whatsapp) => (
-													<MenuItem key={whatsapp.id} value={whatsapp.id}>{whatsapp.name}</MenuItem>
-												))}
-											</Field>
-										</FormControl>
-									)}
-								/>
 							</DialogContent>
 							<DialogActions>
 								<Button

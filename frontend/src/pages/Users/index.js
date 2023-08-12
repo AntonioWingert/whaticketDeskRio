@@ -31,6 +31,9 @@ import ConfirmationModal from "../../components/ConfirmationModal";
 import toastError from "../../errors/toastError";
 import { Avatar } from "@material-ui/core";
 import { AccountCircle } from "@material-ui/icons";
+import { getBackendUrl } from "../../config";
+
+const backendUrl = getBackendUrl();
 
 const reducer = (state, action) => {
   if (action.type === "LOAD_USERS") {
@@ -273,7 +276,7 @@ const Users = () => {
                       {
                         user.profileImage ? (
                           <Avatar
-                            src={`http://localhost:8080/profilePics/${user.profileImage}`}
+                            src={`${backendUrl}profilePics/${user.profileImage}`}
                             alt={user.name}
                             className={classes.userAvatar}
                           />)
