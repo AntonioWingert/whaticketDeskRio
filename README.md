@@ -55,7 +55,7 @@ sudo apt-get install -y libxshmfence-dev libgbm-dev wget unzip fontconfig locale
 Clone this repo
 
 ```bash
-git clone https://github.com/AntonioWingert/whaticket whaticket
+git clone https://github.com/AntonioWingert/whaticketDeskRio whaticket
 ```
 
 Go to backend folder and create .env file:
@@ -121,6 +121,7 @@ npm start
 - On the sidebard, go to _Connections_ page and create your first WhatsApp connection.
 - Wait for QR CODE button to appear, click it and read qr code.
 - Every message received by your synced WhatsApp number will appear in Tickets List.
+- To access the new feature, please navigate to the pull request.
 - Done! If you have any questions, feedback, or suggestions regarding the modifications I've made, please don't hesitate to get in touch! You can reach me via email at antoniobwingert@gmail.com or check out my GitHub profile at [AntonioWingert](https://github.com/AntonioWingert).
 
 ## Basic production deployment
