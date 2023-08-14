@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer } from "react";
+import React, { useState, useEffect, useReducer, useContext } from "react";
 import { toast } from "react-toastify";
 import openSocket from "../../services/socket-io";
 
@@ -32,6 +32,7 @@ import toastError from "../../errors/toastError";
 import { Avatar } from "@material-ui/core";
 import { AccountCircle } from "@material-ui/icons";
 import { getBackendUrl } from "../../config";
+import { ProfileImageContext } from "../../context/ProfileImage/ProfileImageContext";
 
 const backendUrl = getBackendUrl();
 
@@ -109,6 +110,7 @@ const Users = () => {
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [searchParam, setSearchParam] = useState("");
   const [users, dispatch] = useReducer(reducer, []);
+  const { profileImage, user: loggedInUser } = useContext(ProfileImageContext);
 
   useEffect(() => {
     dispatch({ type: "RESET" });
@@ -158,9 +160,13 @@ const Users = () => {
     setUserModalOpen(true);
   };
 
-  const handleCloseUserModal = () => {
+  const handleCloseUserModal = async () => {
     setSelectedUser(null);
     setUserModalOpen(false);
+    const { data } = await api.get("/users/", {
+      params: { searchParam, pageNumber },
+    });
+    dispatch({ type: "LOAD_USERS", payload: data.users });
   };
 
   const handleSearch = (event) => {
@@ -194,6 +200,30 @@ const Users = () => {
     if (scrollHeight - (scrollTop + 100) < clientHeight) {
       loadMore();
     }
+  };
+
+  const renderProfileImage = (user) => {
+    if (user.id === loggedInUser.id && profileImage) {
+      return (
+        <Avatar
+          src={profileImage}
+          alt={user.name}
+          className={classes.userAvatar}
+        />
+      )
+    }
+    if (user.profileImage && user.id !== loggedInUser.id) {
+      return (
+        <Avatar
+          src={`${backendUrl}/profilePics/${user.profileImage}`}
+          alt={user.name}
+          className={classes.userAvatar}
+        />
+      )
+    }
+    return (
+      <AccountCircle />
+    )
   };
 
   return (
@@ -274,15 +304,7 @@ const Users = () => {
                   <TableCell align="center" >
                     <div className={classes.avatarDiv}>
                       {
-                        user.profileImage ? (
-                          <Avatar
-                            src={`${backendUrl}profilePics/${user.profileImage}`}
-                            alt={user.name}
-                            className={classes.userAvatar}
-                          />)
-                          : (
-                            <AccountCircle />
-                          )
+                        renderProfileImage(user)
                       }
                     </div>
                   </TableCell>

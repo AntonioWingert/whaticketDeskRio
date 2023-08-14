@@ -1,4 +1,6 @@
-import React, { createContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { AuthContext } from "../Auth/AuthContext";
+import { getBackendUrl } from "../../config";
 
 const ProfileImageContext = createContext();
 
@@ -6,17 +8,25 @@ const ProfileImageProvider = ({ children }) => {
   const [user, setUser] = useState({});
   const [profileImage, setProfileImage] = useState(null);
 
-  const handleUser = (user) => {
-    setUser(user);
-  }
+  const { user: loggedInUser } = useContext(AuthContext)
 
-  const handleProfileImage = (profileImage) => {
-    setProfileImage(profileImage);
-  }
+  useEffect(() => {
+    setUser(loggedInUser);
+  }, [loggedInUser]);
+
+  useEffect(() => {
+    if (user) {
+      setProfileImage(user.profileImage ? `${getBackendUrl()}/profilePics/${user.profileImage}` : null);
+    }
+  }, [user]);
+
+  const updateProfileImage = (newProfileImage) => {
+    setProfileImage(newProfileImage);
+  };
 
   return (
     <ProfileImageContext.Provider
-      value={{ user, profileImage, handleUser, handleProfileImage }}
+      value={{ user, profileImage, updateProfileImage }}
     >
       {children}
     </ProfileImageContext.Provider>

@@ -35,9 +35,9 @@ import api from "../../services/api";
 import toastError from "../../errors/toastError";
 import QueueSelect from "../QueueSelect";
 import { AuthContext } from "../../context/Auth/AuthContext";
+import { ProfileImageContext } from "../../context/ProfileImage/ProfileImageContext";
 import { Can } from "../Can";
 import useWhatsApps from "../../hooks/useWhatsApps";
-import { ProfileImageContext } from "../../context/ProfileImage/ProfileImageContext";
 import { getBackendUrl } from "../../config";
 
 const backendUrl = getBackendUrl();
@@ -149,13 +149,13 @@ const UserModal = ({ open, onClose, userId }) => {
 	};
 
 	const { user: loggedInUser } = useContext(AuthContext);
+	const { updateProfileImage } = useContext(ProfileImageContext);
 
 	const [user, setUser] = useState(initialState);
 	const [selectedQueueIds, setSelectedQueueIds] = useState([]);
 	const [showPassword, setShowPassword] = useState(false);
 	const [whatsappId, setWhatsappId] = useState(false);
 	const { loading, whatsApps } = useWhatsApps();
-	const { handleProfileImage, handleUser } = useContext(ProfileImageContext);
 
 	useEffect(() => {
 		const fetchUser = async () => {
@@ -163,12 +163,13 @@ const UserModal = ({ open, onClose, userId }) => {
 			try {
 				const { data } = await api.get(`/users/${userId}`);
 				const { profileImage } = data;
-				const profileUrl = profileImage ? `${backendUrl}profilePics/${profileImage}` : null;
+				const profileUrl = profileImage ? `${backendUrl}/profilePics/${profileImage}` : null;
+
 				setUser(prevState => {
 					return { ...prevState, ...data, avatar: profileUrl };
 				});
 
-				loggedInUser.profileImage = profileUrl;
+				if (userId === loggedInUser.id) updateProfileImage(profileUrl);
 
 				const userQueueIds = data.queues?.map(queue => queue.id);
 				setSelectedQueueIds(userQueueIds);
@@ -180,11 +181,6 @@ const UserModal = ({ open, onClose, userId }) => {
 
 		fetchUser();
 	}, [userId, open]);
-
-	useEffect(() => {
-		handleUser(user);
-		handleProfileImage(user.avatar);
-	}, [user, handleUser, handleProfileImage]);
 
 	const handleClose = () => {
 		onClose();
@@ -199,7 +195,10 @@ const UserModal = ({ open, onClose, userId }) => {
 		formData.append('password', values.password);
 		formData.append('profile', values.profile);
 		formData.append('avatar', values.avatar);
-		formData.append('whatsappId', whatsappId);
+
+		const whatsappIdValue =  whatsappId ? whatsappId : '';
+		formData.append('whatsappId', whatsappIdValue);
+
 		if (selectedQueueIds.length > 0) {
 			for (const id of selectedQueueIds) {
 				formData.append('queueIds[]', id);
@@ -209,7 +208,6 @@ const UserModal = ({ open, onClose, userId }) => {
 		}
 
 		try {
-
 			if (userId) {
 				await api.put(`/users/${userId}`, formData);
 			} else {
@@ -219,6 +217,7 @@ const UserModal = ({ open, onClose, userId }) => {
 		} catch (err) {
 			toastError(err);
 		}
+		if (userId === loggedInUser.id) updateProfileImage(user.avatar);
 		handleClose();
 	};
 
