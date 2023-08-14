@@ -195,7 +195,9 @@ const UserModal = ({ open, onClose, userId }) => {
 		formData.append('password', values.password);
 		formData.append('profile', values.profile);
 		formData.append('avatar', values.avatar);
-		formData.append('whatsappId', whatsappId);
+
+		const whatsappIdValue =  whatsappId ? whatsappId : '';
+		formData.append('whatsappId', whatsappIdValue);
 
 		if (selectedQueueIds.length > 0) {
 			for (const id of selectedQueueIds) {
