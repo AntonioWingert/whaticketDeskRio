@@ -21,7 +21,8 @@ describe("User", () => {
     const { id } = await CreateUserService({
       name: faker.name.findName(),
       email: faker.internet.email(),
-      password: faker.internet.password()
+      password: faker.internet.password(),
+      profileImage: faker.image.imageUrl()
     });
 
     expect(DeleteUserService(id)).resolves.not.toThrow();

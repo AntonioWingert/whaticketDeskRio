@@ -1,6 +1,7 @@
 import "./bootstrap";
 import "reflect-metadata";
 import "express-async-errors";
+import path from "path";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -26,6 +27,10 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(Sentry.Handlers.requestHandler());
 app.use("/public", express.static(uploadConfig.directory));
+app.use(
+  "/profilePics",
+  express.static(path.resolve(__dirname, "..", "public", "uploads", "users"))
+);
 app.use(routes);
 
 app.use(Sentry.Handlers.errorHandler());

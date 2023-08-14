@@ -48,6 +48,10 @@ class User extends Model<User> {
   @Column
   profile: string;
 
+  @Default(null)
+  @Column
+  profileImage: string;
+
   @ForeignKey(() => Whatsapp)
   @Column
   whatsappId: number;
