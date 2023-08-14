@@ -163,12 +163,14 @@ const UserModal = ({ open, onClose, userId }) => {
 			try {
 				const { data } = await api.get(`/users/${userId}`);
 				const { profileImage } = data;
-				const profileUrl = profileImage ? `${backendUrl}profilePics/${profileImage}` : null;
+				const profileUrl = profileImage ? `${backendUrl}/profilePics/${profileImage}` : null;
+				console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaa',data);
 				setUser(prevState => {
 					return { ...prevState, ...data, avatar: profileUrl };
 				});
+				
+				if (userId === loggedInUser.id) loggedInUser.profileImage = profileUrl;
 
-				loggedInUser.profileImage = profileUrl;
 
 				const userQueueIds = data.queues?.map(queue => queue.id);
 				setSelectedQueueIds(userQueueIds);
@@ -184,7 +186,7 @@ const UserModal = ({ open, onClose, userId }) => {
 	useEffect(() => {
 		handleUser(user);
 		handleProfileImage(user.avatar);
-	}, [user, handleUser, handleProfileImage]);
+	}, [open]);
 
 	const handleClose = () => {
 		onClose();

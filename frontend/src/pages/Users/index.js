@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer } from "react";
+import React, { useState, useEffect, useReducer, useContext } from "react";
 import { toast } from "react-toastify";
 import openSocket from "../../services/socket-io";
 
@@ -32,6 +32,8 @@ import toastError from "../../errors/toastError";
 import { Avatar } from "@material-ui/core";
 import { AccountCircle } from "@material-ui/icons";
 import { getBackendUrl } from "../../config";
+import { AuthContext } from "../../context/Auth/AuthContext";
+import { ProfileImageContext } from "../../context/ProfileImage/ProfileImageContext";
 
 const backendUrl = getBackendUrl();
 
@@ -109,6 +111,8 @@ const Users = () => {
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [searchParam, setSearchParam] = useState("");
   const [users, dispatch] = useReducer(reducer, []);
+  const { user: loggedInUser } = useContext(AuthContext);
+  const { profileImage } = useContext(ProfileImageContext);
 
   useEffect(() => {
     dispatch({ type: "RESET" });
@@ -196,6 +200,33 @@ const Users = () => {
     }
   };
 
+  const renderProfileImage = (user) => {
+    console.log(user)
+    console.log(loggedInUser)
+    console.log(profileImage)
+    if (user.id === loggedInUser.id) {
+      return (
+        <Avatar
+          src={profileImage ? profileImage : loggedInUser.profileImage}
+          alt={user.name}
+          className={classes.userAvatar}
+        />
+      )
+    }
+    if (user.profileImage && user.id !== loggedInUser.id) {
+      return (
+        <Avatar
+          src={`${backendUrl}/profilePics/${user.profileImage}`}
+          alt={user.name}
+          className={classes.userAvatar}
+        />
+      )
+    }
+    return (
+      <AccountCircle />
+    )
+  };
+
   return (
     <MainContainer>
       <ConfirmationModal
@@ -274,15 +305,7 @@ const Users = () => {
                   <TableCell align="center" >
                     <div className={classes.avatarDiv}>
                       {
-                        user.profileImage ? (
-                          <Avatar
-                            src={`${backendUrl}profilePics/${user.profileImage}`}
-                            alt={user.name}
-                            className={classes.userAvatar}
-                          />)
-                          : (
-                            <AccountCircle />
-                          )
+                        renderProfileImage(user)
                       }
                     </div>
                   </TableCell>
