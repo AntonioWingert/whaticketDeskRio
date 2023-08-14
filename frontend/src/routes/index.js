@@ -22,10 +22,10 @@ const Routes = () => {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Switch>
-          <Route exact path="/login" component={Login} />
-          <Route exact path="/signup" component={Signup} />
-          <ProfileImageProvider>
+        <ProfileImageProvider>
+          <Switch>
+            <Route exact path="/login" component={Login} />
+            <Route exact path="/signup" component={Signup} />
             <WhatsAppsProvider>
               <LoggedInLayout>
                 <Route exact path="/" component={Dashboard} isPrivate />
@@ -53,9 +53,9 @@ const Routes = () => {
                 <Route exact path="/Queues" component={Queues} isPrivate />
               </LoggedInLayout>
             </WhatsAppsProvider>
-          </ProfileImageProvider>
-        </Switch>
-        <ToastContainer autoClose={3000} />
+          </Switch>
+          <ToastContainer autoClose={3000} />
+        </ProfileImageProvider>
       </AuthProvider>
     </BrowserRouter>
   );
