@@ -12,6 +12,9 @@ interface Request {
   profile?: string;
   whatsappId?: number;
   profileImage: string | null;
+  userStatus: number;
+  awayMessage?: string;
+  offlineMessage?: string;
 }
 
 interface Response {
@@ -28,7 +31,10 @@ const CreateUserService = async ({
   queueIds = [],
   profile = "admin",
   whatsappId,
-  profileImage
+  profileImage,
+  userStatus = 1,
+  awayMessage = "",
+  offlineMessage = ""
 }: Request): Promise<Response> => {
   const schema = Yup.object().shape({
     name: Yup.string().required().min(2),
@@ -46,11 +52,12 @@ const CreateUserService = async ({
           return !emailExists;
         }
       ),
-    password: Yup.string().required().min(5)
+    password: Yup.string().required().min(5),
+    userStatus: Yup.number().required()
   });
 
   try {
-    await schema.validate({ email, password, name });
+    await schema.validate({ email, password, name, userStatus });
   } catch (err) {
     throw new AppError(err.message);
   }
@@ -62,7 +69,10 @@ const CreateUserService = async ({
       name,
       profile,
       whatsappId: whatsappId || null,
-      profileImage: profileImage || null
+      profileImage: profileImage || null,
+      userStatus: userStatus || 1,
+      awayMessage,
+      offlineMessage
     },
     { include: ["queues", "whatsapp"] }
   );

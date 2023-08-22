@@ -26,6 +26,10 @@ import { AuthContext } from "../context/Auth/AuthContext";
 import { ProfileImageContext } from "../context/ProfileImage/ProfileImageContext";
 import BackdropLoading from "../components/BackdropLoading";
 import { i18n } from "../translate/i18n";
+import StatusModal from "../components/StatusModal";
+import StatusIcon from "../components/StatusIcon";
+import api from "../services/api";
+import toastError from "../errors/toastError";
 
 const drawerWidth = 240;
 
@@ -120,8 +124,20 @@ const LoggedInLayout = ({ children }) => {
   const { handleLogout, loading } = useContext(AuthContext);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerVariant, setDrawerVariant] = useState("permanent");
-  const { user } = useContext(AuthContext);
-  const { profileImage } = useContext(ProfileImageContext)
+  const { user, handleUpdate } = useContext(AuthContext);
+  const {
+    profileImage,
+    status,
+    handleOpenStatusModal,
+    statusModalOpen,
+    handleCloseStatusModal,
+    handleStatusChange,
+    awayMessage,
+    offlineMessage,
+    handleAwayMessageChange,
+    handleOfflineMessageChange,
+  } = useContext(ProfileImageContext)
+
 
   useEffect(() => {
     if (document.body.offsetWidth > 600) {
@@ -162,6 +178,32 @@ const LoggedInLayout = ({ children }) => {
       setDrawerOpen(false);
     }
   };
+  
+  const handleStatusSubmit = async () => {
+    const modifiedStatus = status.toLowerCase();
+    const newStatus = modifiedStatus === 'online' ? 1 : modifiedStatus === 'offline' ? 2 : 3;
+    try {
+			await api.post(`/users/${user.id}/status`, {
+        userId: user.id,
+				alteredUserId: user.id,
+				lastStatusId: user.userStatus,
+				actualStatusId: newStatus,
+			});
+      await api.put(`/users/${user.id}`, {
+        userStatus: newStatus,
+        awayMessage,
+        offlineMessage,
+      });
+      handleStatusChange(modifiedStatus);
+      handleAwayMessageChange(awayMessage);
+      handleOfflineMessageChange(offlineMessage);
+      
+		} catch (err) {
+      toastError(err);
+		}
+    handleUpdate();
+    handleCloseStatusModal();
+	};
 
   if (loading) {
     return <BackdropLoading />;
@@ -226,6 +268,23 @@ const LoggedInLayout = ({ children }) => {
           {user.id && <NotificationsPopOver />}
 
           <div>
+           <IconButton
+              color="inherit"
+              onClick={handleOpenStatusModal}
+            >
+              <StatusIcon currentStatus={status} />
+            </IconButton>
+            <StatusModal
+              open={statusModalOpen}
+              currentStatus={status}
+              onClose={handleCloseStatusModal}
+              handleStatusChange={handleStatusChange}
+              awayMessage={awayMessage}
+              offlineMessage={offlineMessage}
+              setAwayMessage={handleAwayMessageChange}
+              setOfflineMessage={handleOfflineMessageChange}
+              handleStatusSubmit={handleStatusSubmit}
+            />
             <IconButton
               aria-label="account of current user"
               aria-controls="menu-appbar"
@@ -236,8 +295,8 @@ const LoggedInLayout = ({ children }) => {
               {
                 user ?
                   <Avatar
-                    alt="User avatar" 
-                    src={profileImage ? profileImage : user.profileImage} 
+                    alt="User avatar"
+                    src={profileImage ? profileImage : user.profileImage}
                     className={classes.userAvatar}
                   /> : <AccountCircle />
               }

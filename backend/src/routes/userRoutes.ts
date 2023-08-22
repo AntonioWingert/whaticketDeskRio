@@ -25,6 +25,8 @@ userRoutes.put(
   UserController.update
 );
 
+userRoutes.post("/users/:userId/status", isAuth, UserController.updateStatus);
+
 userRoutes.get("/users/:userId", isAuth, UserController.show);
 
 userRoutes.delete("/users/:userId", isAuth, UserController.remove);

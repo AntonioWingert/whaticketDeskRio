@@ -13,6 +13,10 @@ interface SerializedUser {
   email: string;
   profile: string;
   queues: Queue[];
+  userStatus: number;
+  offlineMessage: string;
+  awayMessage: string;
+  profileImage: string;
 }
 
 interface Request {

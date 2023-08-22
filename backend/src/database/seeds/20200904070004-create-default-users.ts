@@ -13,6 +13,9 @@ module.exports = {
           profile: "admin",
           profileImage: null,
           tokenVersion: 0,
+          userStatus: 1,
+          awayMessage: "Olá, estamos em pausa no momento.",
+          offlineMessage: "Olá, estamos offline no momento.",
           createdAt: new Date(),
           updatedAt: new Date()
         }

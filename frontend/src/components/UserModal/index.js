@@ -39,6 +39,8 @@ import { ProfileImageContext } from "../../context/ProfileImage/ProfileImageCont
 import { Can } from "../Can";
 import useWhatsApps from "../../hooks/useWhatsApps";
 import { getBackendUrl } from "../../config";
+import StatusModal from "../StatusModal";
+import StatusIcon from "../StatusIcon";
 
 const backendUrl = getBackendUrl();
 
@@ -146,15 +148,23 @@ const UserModal = ({ open, onClose, userId }) => {
 		profile: "user",
 		avatar: null,
 		profileImage: null,
+		userStatus: 'online',
 	};
 
 	const { user: loggedInUser } = useContext(AuthContext);
-	const { updateProfileImage } = useContext(ProfileImageContext);
+	const {
+		updateProfileImage,
+		handleStatusChange: setUserStatus,
+	} = useContext(ProfileImageContext);
 
 	const [user, setUser] = useState(initialState);
 	const [selectedQueueIds, setSelectedQueueIds] = useState([]);
 	const [showPassword, setShowPassword] = useState(false);
 	const [whatsappId, setWhatsappId] = useState(false);
+	const [statusModalOpen, setStatusModalOpen] = useState(false);
+	const [awayMessage, setAwayMessage] = useState('');
+	const [offlineMessage, setOfflineMessage] = useState('');
+	const [lastState, setLastState] = useState('online');
 	const { loading, whatsApps } = useWhatsApps();
 
 	useEffect(() => {
@@ -165,11 +175,19 @@ const UserModal = ({ open, onClose, userId }) => {
 				const { profileImage } = data;
 				const profileUrl = profileImage ? `${backendUrl}/profilePics/${profileImage}` : null;
 
+				setAwayMessage(data.awayMessage);
+				setOfflineMessage(data.offlineMessage);
+
 				setUser(prevState => {
-					return { ...prevState, ...data, avatar: profileUrl };
+					return { ...prevState, ...data, avatar: profileUrl, userStatus: data.status.name };
 				});
 
-				if (userId === loggedInUser.id) updateProfileImage(profileUrl);
+				setLastState(data.userStatus);
+
+				if (userId === loggedInUser.id) {
+					updateProfileImage(profileUrl)
+					setUserStatus(data.status.name);
+				};
 
 				const userQueueIds = data.queues?.map(queue => queue.id);
 				setSelectedQueueIds(userQueueIds);
@@ -195,8 +213,25 @@ const UserModal = ({ open, onClose, userId }) => {
 		formData.append('password', values.password);
 		formData.append('profile', values.profile);
 		formData.append('avatar', values.avatar);
+		formData.append('awayMessage', awayMessage ? awayMessage : null);
+		formData.append('offlineMessage', offlineMessage ? offlineMessage : null);
 
-		const whatsappIdValue =  whatsappId ? whatsappId : '';
+		switch (user.userStatus) {
+			case 'online':
+				formData.append('userStatus', 1);
+				break;
+			case 'offline':
+				formData.append('userStatus', 2);
+				break;
+			case 'em pausa':
+				formData.append('userStatus', 3);
+				break;
+			default:
+				formData.append('userStatus', 1);
+				break;
+		}
+
+		const whatsappIdValue = whatsappId ? whatsappId : '';
 		formData.append('whatsappId', whatsappIdValue);
 
 		if (selectedQueueIds.length > 0) {
@@ -210,9 +245,11 @@ const UserModal = ({ open, onClose, userId }) => {
 		try {
 			if (userId) {
 				await api.put(`/users/${userId}`, formData);
+				handleStatusSubmit();
 			} else {
 				await api.post("/users", formData);
 			}
+
 			toast.success(i18n.t("userModal.success"));
 		} catch (err) {
 			toastError(err);
@@ -229,6 +266,33 @@ const UserModal = ({ open, onClose, userId }) => {
 			avatar: URL.createObjectURL(e.target.files[0]),
 			profileImage: e.target.files[0]
 		}));
+	};
+
+	const handleOpenStatusModal = () => {
+		setStatusModalOpen(true);
+	};
+
+	const handleCloseStatusModal = () => {
+		setStatusModalOpen(false);
+	};
+
+	const handleStatusChange = (status) => {
+		setUser(prevState => ({ ...prevState, userStatus: status }));
+		if (userId === loggedInUser.id) setUserStatus(status);
+	};
+
+	const handleStatusSubmit = async () => {
+		try {
+			await api.post(`/users/${userId}/status`, {
+				userId: loggedInUser.id,
+				alteredUserId: userId,
+				lastStatusId: lastState,
+				actualStatusId: user.userStatus === 'online' ? 1 : user.userStatus === 'offline' ? 2 : 3,
+			});
+		} catch (err) {
+			toastError(err);
+		}
+		handleCloseStatusModal();
 	};
 
 	return (
@@ -381,6 +445,28 @@ const UserModal = ({ open, onClose, userId }) => {
 												onChange={values => setSelectedQueueIds(values)}
 											/>
 										)}
+									/>
+									<Can
+										role={loggedInUser.profile}
+										perform="user-modal:editQueues"
+										yes={() => (
+											<IconButton
+												color="inherit"
+												onClick={handleOpenStatusModal}
+											>
+												<StatusIcon currentStatus={user.userStatus} />
+											</IconButton>
+										)}
+									/>
+									<StatusModal
+										open={statusModalOpen}
+										currentStatus={user.userStatus}
+										onClose={handleCloseStatusModal}
+										handleStatusChange={handleStatusChange}
+										setAwayMessage={setAwayMessage}
+										setOfflineMessage={setOfflineMessage}
+										awayMessage={awayMessage}
+										offlineMessage={offlineMessage}
 									/>
 									<Can
 										role={loggedInUser.profile}

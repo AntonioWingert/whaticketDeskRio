@@ -9,6 +9,7 @@ import ListUsersService from "../services/UserServices/ListUsersService";
 import UpdateUserService from "../services/UserServices/UpdateUserService";
 import ShowUserService from "../services/UserServices/ShowUserService";
 import DeleteUserService from "../services/UserServices/DeleteUserService";
+import UpdateStatusService from "../services/UserServices/UpdateStatusService";
 
 type IndexQuery = {
   searchParam: string;
@@ -27,7 +28,8 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
 };
 
 export const store = async (req: Request, res: Response): Promise<Response> => {
-  const { email, password, name, profile, queueIds, whatsappId } = req.body;
+  const { email, password, name, profile, queueIds, whatsappId, userStatus } =
+    req.body;
 
   const profileImage = req.file ? req.file.filename : null;
 
@@ -47,7 +49,8 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     profile,
     queueIds,
     whatsappId,
-    profileImage
+    profileImage,
+    userStatus
   });
 
   const io = getIO();
@@ -109,4 +112,26 @@ export const remove = async (
   });
 
   return res.status(200).json({ message: "User deleted" });
+};
+
+export const updateStatus = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const { userId, alteredUserId, lastStatusId, actualStatusId } = req.body;
+
+  if (userId !== alteredUserId) {
+    if (req.user.profile !== "admin") {
+      throw new AppError("ERR_NO_PERMISSION", 403);
+    }
+  }
+
+  await UpdateStatusService({
+    userId,
+    alteredUserId,
+    lastStatusId,
+    actualStatusId
+  });
+
+  return res.status(204).send();
 };
