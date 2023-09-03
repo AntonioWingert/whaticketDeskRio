@@ -31,6 +31,7 @@ const UpdateTicketService = async ({
 
   const ticket = await ShowTicketService(ticketId);
   await SetTicketMessagesAsRead(ticket);
+
   if (userId) {
     await UpdateUserService({
       userData: { userStatus: 1 },
