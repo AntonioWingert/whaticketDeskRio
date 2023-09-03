@@ -19,7 +19,7 @@ interface UserData {
 interface Request {
   userData: UserData;
   userId: string | number;
-  profileImage: string | null;
+  profileImage?: string | null;
 }
 
 interface Response {

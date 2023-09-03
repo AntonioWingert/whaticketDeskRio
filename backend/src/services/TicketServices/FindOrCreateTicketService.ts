@@ -4,7 +4,6 @@ import Contact from "../../models/Contact";
 import Ticket from "../../models/Ticket";
 import ShowTicketService from "./ShowTicketService";
 import SendWhatsAppMessage from "../WbotServices/SendWhatsAppMessage";
-import ShowUserService from "../UserServices/ShowUserService";
 
 const FindOrCreateTicketService = async (
   contact: Contact,
@@ -74,28 +73,12 @@ const FindOrCreateTicketService = async (
       whatsappId
     });
 
-    console.log("ticket", ticket);
+    const newTicket = await ShowTicketService(ticket.id);
 
-    // const newTicket = await ShowTicketService(ticket.id);
-
-    /* 
-    if (user?.userStatus === 2) {
-      await SendWhatsAppMessage({
-        body: user?.awayMessage,
-        ticket: newTicket
-      });
-    }
-    if (user?.userStatus === 3) {
-      await SendWhatsAppMessage({
-        body: user?.offlineMessage,
-        ticket: newTicket
-      });
-    }
     await SendWhatsAppMessage({
-      body: `Olá, ${newTicket.contact.name}! Seja bem-vindo(a) ao nosso atendimento!`,
+      body: `Olá, ${newTicket.contact.name}! Em breve entrarei em contato! Obrigado!`,
       ticket: newTicket
     });
-    */
   }
 
   ticket = await ShowTicketService(ticket.id);

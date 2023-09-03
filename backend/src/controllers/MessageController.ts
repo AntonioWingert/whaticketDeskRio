@@ -9,6 +9,7 @@ import ShowTicketService from "../services/TicketServices/ShowTicketService";
 import DeleteWhatsAppMessage from "../services/WbotServices/DeleteWhatsAppMessage";
 import SendWhatsAppMedia from "../services/WbotServices/SendWhatsAppMedia";
 import SendWhatsAppMessage from "../services/WbotServices/SendWhatsAppMessage";
+import ShowUserService from "../services/UserServices/ShowUserService";
 
 type IndexQuery = {
   pageNumber: string;
@@ -30,7 +31,29 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     ticketId
   });
 
+  console.log("messages", messages);
+
   SetTicketMessagesAsRead(ticket);
+
+  const user = await ShowUserService(ticket.user.id);
+
+  const lastMessage = messages[messages.length - 1];
+
+  if (lastMessage.fromMe === false) {
+    if (user.userStatus === 2 && user.offlineMessage !== lastMessage.body) {
+      await SendWhatsAppMessage({
+        ticket,
+        body: user.offlineMessage
+      });
+    }
+
+    if (user.userStatus === 3 && user.awayMessage !== lastMessage.body) {
+      await SendWhatsAppMessage({
+        ticket,
+        body: user.awayMessage
+      });
+    }
+  }
 
   return res.json({ count, messages, ticket, hasMore });
 };
