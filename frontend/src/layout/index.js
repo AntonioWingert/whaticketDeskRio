@@ -13,6 +13,7 @@ import {
   IconButton,
   Menu,
   Avatar,
+  Popover,
 } from "@material-ui/core";
 
 import MenuIcon from "@material-ui/icons/Menu";
@@ -26,7 +27,6 @@ import { AuthContext } from "../context/Auth/AuthContext";
 import { ProfileImageContext } from "../context/ProfileImage/ProfileImageContext";
 import BackdropLoading from "../components/BackdropLoading";
 import { i18n } from "../translate/i18n";
-import StatusModal from "../components/StatusModal";
 import StatusIcon from "../components/StatusIcon";
 import api from "../services/api";
 import toastError from "../errors/toastError";
@@ -132,10 +132,6 @@ const LoggedInLayout = ({ children }) => {
     statusModalOpen,
     handleCloseStatusModal,
     handleStatusChange,
-    awayMessage,
-    offlineMessage,
-    handleAwayMessageChange,
-    handleOfflineMessageChange,
   } = useContext(ProfileImageContext)
 
 
@@ -178,32 +174,28 @@ const LoggedInLayout = ({ children }) => {
       setDrawerOpen(false);
     }
   };
-  
-  const handleStatusSubmit = async () => {
+
+  const handleStatusSubmit = async (status) => {
     const modifiedStatus = status.toLowerCase();
     const newStatus = modifiedStatus === 'online' ? 1 : modifiedStatus === 'offline' ? 2 : 3;
     try {
-			await api.post(`/users/${user.id}/status`, {
+      await api.post(`/users/${user.id}/status`, {
         userId: user.id,
-				alteredUserId: user.id,
-				lastStatusId: user.userStatus,
-				actualStatusId: newStatus,
-			});
+        alteredUserId: user.id,
+        lastStatusId: user.userStatus,
+        actualStatusId: newStatus,
+      });
       await api.put(`/users/${user.id}`, {
         userStatus: newStatus,
-        awayMessage,
-        offlineMessage,
       });
       handleStatusChange(modifiedStatus);
-      handleAwayMessageChange(awayMessage);
-      handleOfflineMessageChange(offlineMessage);
-      
-		} catch (err) {
+
+    } catch (err) {
       toastError(err);
-		}
+    }
     handleUpdate();
     handleCloseStatusModal();
-	};
+  };
 
   if (loading) {
     return <BackdropLoading />;
@@ -268,23 +260,37 @@ const LoggedInLayout = ({ children }) => {
           {user.id && <NotificationsPopOver />}
 
           <div>
-           <IconButton
+            <IconButton
               color="inherit"
               onClick={handleOpenStatusModal}
+              aria-controls="menu-appbar"
+              aria-haspopup="true"
             >
               <StatusIcon currentStatus={status} />
             </IconButton>
-            <StatusModal
+
+            <Popover
               open={statusModalOpen}
-              currentStatus={status}
+              anchorEl={anchorEl}
               onClose={handleCloseStatusModal}
-              handleStatusChange={handleStatusChange}
-              awayMessage={awayMessage}
-              offlineMessage={offlineMessage}
-              setAwayMessage={handleAwayMessageChange}
-              setOfflineMessage={handleOfflineMessageChange}
-              handleStatusSubmit={handleStatusSubmit}
-            />
+              anchorOrigin={{
+                vertical: "top",
+                horizontal: "right",
+              }}
+            >
+              <div style={{display: 'flex', flexDirection: 'column'}}>
+                <IconButton onClick={() => handleStatusSubmit('online')}>
+                  <StatusIcon currentStatus={`online`} />
+                </IconButton>
+                <IconButton onClick={() => handleStatusSubmit('offline')}>
+                  <StatusIcon currentStatus={`offline`} />
+                </IconButton>
+                <IconButton onClick={() => handleStatusSubmit('away')}>
+                  <StatusIcon currentStatus={`away`} />
+                </IconButton>
+              </div>
+            </Popover>
+            
             <IconButton
               aria-label="account of current user"
               aria-controls="menu-appbar"

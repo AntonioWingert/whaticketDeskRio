@@ -446,18 +446,12 @@ const UserModal = ({ open, onClose, userId }) => {
 											/>
 										)}
 									/>
-									<Can
-										role={loggedInUser.profile}
-										perform="user-modal:editQueues"
-										yes={() => (
-											<IconButton
-												color="inherit"
-												onClick={handleOpenStatusModal}
-											>
-												<StatusIcon currentStatus={user.userStatus} />
-											</IconButton>
-										)}
-									/>
+									<IconButton
+										color="inherit"
+										onClick={handleOpenStatusModal}
+									>
+										<StatusIcon currentStatus={user.userStatus} />
+									</IconButton>
 									<StatusModal
 										open={statusModalOpen}
 										currentStatus={user.userStatus}
