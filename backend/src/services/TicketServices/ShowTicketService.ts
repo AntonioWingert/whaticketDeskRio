@@ -34,8 +34,6 @@ const ShowTicketService = async (id: string | number): Promise<Ticket> => {
     ]
   });
 
-  console.log(ticket);
-
   if (ticket?.userId) {
     const user = await ShowUserService(ticket?.userId);
 
