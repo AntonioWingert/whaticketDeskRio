@@ -102,6 +102,20 @@ const useAuth = () => {
 		}
 	};
 
+	const handleUpdate = async () => {
+		setLoading(true);
+
+		try {
+			const { data } = await api.get(`/users/${user.id}`);
+			setUser(data);
+			setLoading(false);
+		} catch (err) {
+			toastError(err);
+			setLoading(false);
+		}
+	};
+
+
 	const handleLogout = async () => {
 		setLoading(true);
 
@@ -119,7 +133,7 @@ const useAuth = () => {
 		}
 	};
 
-	return { isAuth, user, loading, handleLogin, handleLogout };
+	return { isAuth, user, loading, handleLogin, handleLogout, handleUpdate };
 };
 
 export default useAuth;

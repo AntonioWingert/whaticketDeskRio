@@ -22,6 +22,7 @@ import MarkdownWrapper from "../MarkdownWrapper";
 import { Tooltip } from "@material-ui/core";
 import { AuthContext } from "../../context/Auth/AuthContext";
 import toastError from "../../errors/toastError";
+import { ProfileImageContext } from "../../context/ProfileImage/ProfileImageContext";
 
 const useStyles = makeStyles(theme => ({
 	ticket: {
@@ -123,6 +124,7 @@ const TicketListItem = ({ ticket }) => {
 	const { ticketId } = useParams();
 	const isMounted = useRef(true);
 	const { user } = useContext(AuthContext);
+	const { handleStatusChange } = useContext(ProfileImageContext);
 
 	useEffect(() => {
 		return () => {
@@ -137,6 +139,7 @@ const TicketListItem = ({ ticket }) => {
 				status: "open",
 				userId: user?.id,
 			});
+			handleStatusChange("online");
 		} catch (err) {
 			setLoading(false);
 			toastError(err);

@@ -22,7 +22,8 @@ describe("User", () => {
       name: faker.name.findName(),
       email: faker.internet.email(),
       password: faker.internet.password(),
-      profileImage: faker.image.imageUrl()
+      profileImage: faker.image.imageUrl(),
+      userStatus: 1
     });
 
     expect(DeleteUserService(id)).resolves.not.toThrow();

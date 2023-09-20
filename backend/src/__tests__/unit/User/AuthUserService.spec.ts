@@ -25,7 +25,8 @@ describe("Auth", () => {
       name: faker.name.findName(),
       email,
       password,
-      profileImage: faker.image.imageUrl()
+      profileImage: faker.image.imageUrl(),
+      userStatus: 1
     });
 
     const response = await AuthUserService({
@@ -54,7 +55,8 @@ describe("Auth", () => {
       name: faker.name.findName(),
       email: "mail@test.com",
       password: faker.internet.password(),
-      profileImage: faker.image.imageUrl()
+      profileImage: faker.image.imageUrl(),
+      userStatus: 1
     });
 
     try {

@@ -3,6 +3,7 @@ import { Op } from "sequelize";
 import Contact from "../../models/Contact";
 import Ticket from "../../models/Ticket";
 import ShowTicketService from "./ShowTicketService";
+import SendWhatsAppMessage from "../WbotServices/SendWhatsAppMessage";
 
 const FindOrCreateTicketService = async (
   contact: Contact,
@@ -16,7 +17,7 @@ const FindOrCreateTicketService = async (
         [Op.or]: ["open", "pending"]
       },
       contactId: groupContact ? groupContact.id : contact.id,
-      whatsappId: whatsappId
+      whatsappId
     }
   });
 
@@ -28,7 +29,7 @@ const FindOrCreateTicketService = async (
     ticket = await Ticket.findOne({
       where: {
         contactId: groupContact.id,
-        whatsappId: whatsappId
+        whatsappId
       },
       order: [["updatedAt", "DESC"]]
     });
@@ -49,7 +50,7 @@ const FindOrCreateTicketService = async (
           [Op.between]: [+subHours(new Date(), 2), +new Date()]
         },
         contactId: contact.id,
-        whatsappId: whatsappId
+        whatsappId
       },
       order: [["updatedAt", "DESC"]]
     });
@@ -70,6 +71,13 @@ const FindOrCreateTicketService = async (
       isGroup: !!groupContact,
       unreadMessages,
       whatsappId
+    });
+
+    const newTicket = await ShowTicketService(ticket.id);
+
+    await SendWhatsAppMessage({
+      body: `Olá, ${newTicket.contact.name}! Em breve entrarei em contato! Obrigado!`,
+      ticket: newTicket
     });
   }
 

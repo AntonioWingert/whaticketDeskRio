@@ -22,7 +22,8 @@ describe("User", () => {
       name: faker.name.findName(),
       email: faker.internet.email(),
       password: faker.internet.password(),
-      profileImage: faker.image.imageUrl()
+      profileImage: faker.image.imageUrl(),
+      userStatus: 1
     });
 
     const updatedUser = await UpdateUserService({
@@ -56,7 +57,8 @@ describe("User", () => {
       name: faker.name.findName(),
       email: faker.internet.email(),
       password: faker.internet.password(),
-      profileImage: faker.image.imageUrl()
+      profileImage: faker.image.imageUrl(),
+      userStatus: 1
     });
 
     const userId = newUser.id;

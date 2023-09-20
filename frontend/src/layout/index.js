@@ -13,6 +13,7 @@ import {
   IconButton,
   Menu,
   Avatar,
+  Popover,
 } from "@material-ui/core";
 
 import MenuIcon from "@material-ui/icons/Menu";
@@ -26,6 +27,9 @@ import { AuthContext } from "../context/Auth/AuthContext";
 import { ProfileImageContext } from "../context/ProfileImage/ProfileImageContext";
 import BackdropLoading from "../components/BackdropLoading";
 import { i18n } from "../translate/i18n";
+import StatusIcon from "../components/StatusIcon";
+import api from "../services/api";
+import toastError from "../errors/toastError";
 
 const drawerWidth = 240;
 
@@ -120,8 +124,16 @@ const LoggedInLayout = ({ children }) => {
   const { handleLogout, loading } = useContext(AuthContext);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerVariant, setDrawerVariant] = useState("permanent");
-  const { user } = useContext(AuthContext);
-  const { profileImage } = useContext(ProfileImageContext)
+  const { user, handleUpdate } = useContext(AuthContext);
+  const {
+    profileImage,
+    status,
+    handleOpenStatusModal,
+    statusModalOpen,
+    handleCloseStatusModal,
+    handleStatusChange,
+  } = useContext(ProfileImageContext)
+
 
   useEffect(() => {
     if (document.body.offsetWidth > 600) {
@@ -161,6 +173,28 @@ const LoggedInLayout = ({ children }) => {
     if (document.body.offsetWidth < 600) {
       setDrawerOpen(false);
     }
+  };
+
+  const handleStatusSubmit = async (status) => {
+    const modifiedStatus = status.toLowerCase();
+    const newStatus = modifiedStatus === 'online' ? 1 : modifiedStatus === 'offline' ? 2 : 3;
+    try {
+      await api.post(`/users/${user.id}/status`, {
+        userId: user.id,
+        alteredUserId: user.id,
+        lastStatusId: user.userStatus,
+        actualStatusId: newStatus,
+      });
+      await api.put(`/users/${user.id}`, {
+        userStatus: newStatus,
+      });
+      handleStatusChange(modifiedStatus);
+
+    } catch (err) {
+      toastError(err);
+    }
+    handleUpdate();
+    handleCloseStatusModal();
   };
 
   if (loading) {
@@ -227,6 +261,37 @@ const LoggedInLayout = ({ children }) => {
 
           <div>
             <IconButton
+              color="inherit"
+              onClick={handleOpenStatusModal}
+              aria-controls="menu-appbar"
+              aria-haspopup="true"
+            >
+              <StatusIcon currentStatus={status} />
+            </IconButton>
+
+            <Popover
+              open={statusModalOpen}
+              anchorEl={anchorEl}
+              onClose={handleCloseStatusModal}
+              anchorOrigin={{
+                vertical: "top",
+                horizontal: "right",
+              }}
+            >
+              <div style={{display: 'flex', flexDirection: 'column'}}>
+                <IconButton onClick={() => handleStatusSubmit('online')}>
+                  <StatusIcon currentStatus={`online`} />
+                </IconButton>
+                <IconButton onClick={() => handleStatusSubmit('offline')}>
+                  <StatusIcon currentStatus={`offline`} />
+                </IconButton>
+                <IconButton onClick={() => handleStatusSubmit('away')}>
+                  <StatusIcon currentStatus={`away`} />
+                </IconButton>
+              </div>
+            </Popover>
+            
+            <IconButton
               aria-label="account of current user"
               aria-controls="menu-appbar"
               aria-haspopup="true"
@@ -236,8 +301,8 @@ const LoggedInLayout = ({ children }) => {
               {
                 user ?
                   <Avatar
-                    alt="User avatar" 
-                    src={profileImage ? profileImage : user.profileImage} 
+                    alt="User avatar"
+                    src={profileImage ? profileImage : user.profileImage}
                     className={classes.userAvatar}
                   /> : <AccountCircle />
               }

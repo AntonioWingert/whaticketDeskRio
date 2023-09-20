@@ -20,6 +20,8 @@ import Ticket from "./Ticket";
 import Queue from "./Queue";
 import UserQueue from "./UserQueue";
 import Whatsapp from "./Whatsapp";
+import Status from "./Status";
+import StatusQueue from "./StatusQueue";
 
 @Table
 class User extends Model<User> {
@@ -51,6 +53,25 @@ class User extends Model<User> {
   @Default(null)
   @Column
   profileImage: string;
+
+  @Default("")
+  @Column
+  awayMessage: string;
+
+  @Default("")
+  @Column
+  offlineMessage: string;
+
+  @Default(1)
+  @ForeignKey(() => Status)
+  @Column
+  userStatus: number;
+
+  @BelongsTo(() => Status)
+  status: Status;
+
+  @HasMany(() => StatusQueue, "userId")
+  statusQueue: StatusQueue[];
 
   @ForeignKey(() => Whatsapp)
   @Column
