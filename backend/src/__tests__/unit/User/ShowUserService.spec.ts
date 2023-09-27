@@ -22,7 +22,8 @@ describe("User", () => {
     const newUser = await CreateUserService({
       name: faker.name.findName(),
       email: faker.internet.email(),
-      password: faker.internet.password()
+      password: faker.internet.password(),
+      profileImage: faker.image.imageUrl()
     });
 
     const user = await ShowUserService(newUser.id);

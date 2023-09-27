@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer } from "react";
+import React, { useState, useEffect, useReducer, useContext } from "react";
 import { toast } from "react-toastify";
 import openSocket from "../../services/socket-io";
 
@@ -29,6 +29,12 @@ import TableRowSkeleton from "../../components/TableRowSkeleton";
 import UserModal from "../../components/UserModal";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import toastError from "../../errors/toastError";
+import { Avatar } from "@material-ui/core";
+import { AccountCircle } from "@material-ui/icons";
+import { getBackendUrl } from "../../config";
+import { ProfileImageContext } from "../../context/ProfileImage/ProfileImageContext";
+
+const backendUrl = getBackendUrl();
 
 const reducer = (state, action) => {
   if (action.type === "LOAD_USERS") {
@@ -81,6 +87,15 @@ const useStyles = makeStyles((theme) => ({
     overflowY: "scroll",
     ...theme.scrollbarStyles,
   },
+  avatarDiv: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  userAvatar: {
+    width: '20px',
+    height: '20px',
+  }
 }));
 
 const Users = () => {
@@ -95,6 +110,7 @@ const Users = () => {
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [searchParam, setSearchParam] = useState("");
   const [users, dispatch] = useReducer(reducer, []);
+  const { profileImage, user: loggedInUser } = useContext(ProfileImageContext);
 
   useEffect(() => {
     dispatch({ type: "RESET" });
@@ -144,9 +160,13 @@ const Users = () => {
     setUserModalOpen(true);
   };
 
-  const handleCloseUserModal = () => {
+  const handleCloseUserModal = async () => {
     setSelectedUser(null);
     setUserModalOpen(false);
+    const { data } = await api.get("/users/", {
+      params: { searchParam, pageNumber },
+    });
+    dispatch({ type: "LOAD_USERS", payload: data.users });
   };
 
   const handleSearch = (event) => {
@@ -182,13 +202,36 @@ const Users = () => {
     }
   };
 
+  const renderProfileImage = (user) => {
+    if (user.id === loggedInUser.id && profileImage) {
+      return (
+        <Avatar
+          src={profileImage}
+          alt={user.name}
+          className={classes.userAvatar}
+        />
+      )
+    }
+    if (user.profileImage && user.id !== loggedInUser.id) {
+      return (
+        <Avatar
+          src={`${backendUrl}/profilePics/${user.profileImage}`}
+          alt={user.name}
+          className={classes.userAvatar}
+        />
+      )
+    }
+    return (
+      <AccountCircle />
+    )
+  };
+
   return (
     <MainContainer>
       <ConfirmationModal
         title={
           deletingUser &&
-          `${i18n.t("users.confirmationModal.deleteTitle")} ${
-            deletingUser.name
+          `${i18n.t("users.confirmationModal.deleteTitle")} ${deletingUser.name
           }?`
         }
         open={confirmModalOpen}
@@ -236,6 +279,9 @@ const Users = () => {
         <Table size="small">
           <TableHead>
             <TableRow>
+              <TableCell align="center">
+                Avatar
+              </TableCell>
               <TableCell align="center">{i18n.t("users.table.name")}</TableCell>
               <TableCell align="center">
                 {i18n.t("users.table.email")}
@@ -245,7 +291,7 @@ const Users = () => {
               </TableCell>
               <TableCell align="center">
                 {i18n.t("users.table.whatsapp")}
-              </TableCell>              
+              </TableCell>
               <TableCell align="center">
                 {i18n.t("users.table.actions")}
               </TableCell>
@@ -255,6 +301,13 @@ const Users = () => {
             <>
               {users.map((user) => (
                 <TableRow key={user.id}>
+                  <TableCell align="center" >
+                    <div className={classes.avatarDiv}>
+                      {
+                        renderProfileImage(user)
+                      }
+                    </div>
+                  </TableCell>
                   <TableCell align="center">{user.name}</TableCell>
                   <TableCell align="center">{user.email}</TableCell>
                   <TableCell align="center">{user.profile}</TableCell>

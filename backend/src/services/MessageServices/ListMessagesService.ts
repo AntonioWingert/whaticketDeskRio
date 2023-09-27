@@ -44,10 +44,22 @@ const ListMessagesService = async ({
     order: [["createdAt", "DESC"]]
   });
 
+  console.log(messages);
+
   const hasMore = count > offset + messages.length;
 
+  const verifiedMessages = messages.map(message => {
+    const { body } = message;
+
+    if (body === "") {
+      message.body = "Aguardando mensagem, por favor cheque seu telefone.";
+    }
+
+    return message;
+  });
+
   return {
-    messages: messages.reverse(),
+    messages: verifiedMessages.reverse(),
     ticket,
     count,
     hasMore

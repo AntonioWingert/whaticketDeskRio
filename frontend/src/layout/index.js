@@ -12,6 +12,7 @@ import {
   MenuItem,
   IconButton,
   Menu,
+  Avatar,
 } from "@material-ui/core";
 
 import MenuIcon from "@material-ui/icons/Menu";
@@ -22,6 +23,7 @@ import MainListItems from "./MainListItems";
 import NotificationsPopOver from "../components/NotificationsPopOver";
 import UserModal from "../components/UserModal";
 import { AuthContext } from "../context/Auth/AuthContext";
+import { ProfileImageContext } from "../context/ProfileImage/ProfileImageContext";
 import BackdropLoading from "../components/BackdropLoading";
 import { i18n } from "../translate/i18n";
 
@@ -107,6 +109,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
   },
+  userAvatar: { width: '24px', height: '24px' }
 }));
 
 const LoggedInLayout = ({ children }) => {
@@ -118,6 +121,7 @@ const LoggedInLayout = ({ children }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerVariant, setDrawerVariant] = useState("permanent");
   const { user } = useContext(AuthContext);
+  const { profileImage } = useContext(ProfileImageContext)
 
   useEffect(() => {
     if (document.body.offsetWidth > 600) {
@@ -229,7 +233,14 @@ const LoggedInLayout = ({ children }) => {
               onClick={handleMenu}
               color="inherit"
             >
-              <AccountCircle />
+              {
+                user ?
+                  <Avatar
+                    alt="User avatar" 
+                    src={profileImage ? profileImage : user.profileImage} 
+                    className={classes.userAvatar}
+                  /> : <AccountCircle />
+              }
             </IconButton>
             <Menu
               id="menu-appbar"

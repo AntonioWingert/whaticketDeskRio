@@ -29,6 +29,8 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
 export const store = async (req: Request, res: Response): Promise<Response> => {
   const { email, password, name, profile, queueIds, whatsappId } = req.body;
 
+  const profileImage = req.file ? req.file.filename : null;
+
   if (
     req.url === "/signup" &&
     (await CheckSettingsHelper("userCreation")) === "disabled"
@@ -44,7 +46,8 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     name,
     profile,
     queueIds,
-    whatsappId
+    whatsappId,
+    profileImage
   });
 
   const io = getIO();
@@ -74,8 +77,9 @@ export const update = async (
 
   const { userId } = req.params;
   const userData = req.body;
+  const profileImage = req.file ? req.file.filename : null;
 
-  const user = await UpdateUserService({ userData, userId });
+  const user = await UpdateUserService({ userData, userId, profileImage });
 
   const io = getIO();
   io.emit("user", {
